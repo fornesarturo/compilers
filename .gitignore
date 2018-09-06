@@ -1,0 +1,10 @@
+.vscode/
+*.class
+*.out
+*y.tab.c
+*y.tab.h
+*lex.yy.c
+*.pdf
+*.zip
+.DS_STORE
+*.DS_STORE
