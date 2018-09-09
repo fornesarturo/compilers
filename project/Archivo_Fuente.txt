@@ -1,0 +1,41 @@
+entero func1(logico l1, real r1) {
+	real e1;
+	logico e2;
+
+	a = ((e1 + e2) - e3) / func1() ^ 3;
+	b = verdadero | (falso & verdadero);
+	b = b == c;
+	b = b | c;
+
+	regresa a;
+}
+
+real func2(logico l1, real r1) {
+	entero e1;
+	real e1;
+	logico e2;
+	entero e2;
+
+	a = ((e1 + e2) - e3) / func1() ^ 3;
+	b = ((e1 + e2) - e3) / func1() ^ 3;
+	
+	c1 = a & b;
+	c2 = !c1;
+	si(c1) {
+		mientras(b) {
+			b = !b;
+			s = a + b / c;
+		}
+		c1 = !c1;
+	}
+	si(c2){}
+	regresa x1;
+}
+
+principal() {
+	entero e1;
+	real e1;
+	logico e2;
+	entero e2;
+	resultado = fun() + fun2();
+}
