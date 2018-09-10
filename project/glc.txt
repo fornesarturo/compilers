@@ -19,6 +19,10 @@ falso
 >
 ==
 =
++
+-
+*
+/
 
 No Terminales:
 inicio
@@ -46,13 +50,12 @@ Producciones:
 <inicio> ::= <bloque_de_funciones> <principal> | <principal>
 
 
-<principal> ::= principal '(' ')' '{' [<declaraciones>]* <sentencias> '}' 
+<principal> ::= principal '(' ')' '{' [<declaraciones>]* [<sentencias>] '}' 
 
 
 <bloque_de_funciones> ::= <funcion> <bloque_de_funciones>
 
-<sentencias> ::= <sentencia> <sentencias>
-
+<sentencias> ::= <sentencia> [<sentencias>]
 
 <sentencia> ::= <si> | <mientras> | <asignacion>
 
@@ -61,32 +64,26 @@ Producciones:
 
 <tipo_de_dato> ::= real | entero | logico
 
-<argumentos> ::= <argumento> | <argumento> ',' <argumentos>
+<argumentos> ::= <argumento> [',' <argumentos>]
 
 <argumento> ::= <tipo_de_dato> IDENTIFICADOR
 
 <bloque_de_codigo> ::= [<declaraciones>]* [<sentencias>]*
-
 
 <declaraciones> ::= <tipo_de_dato> IDENTIFICADOR ';'
 
 
 <si> ::= si '(' IDENTIFICADOR ')' '{' [<sentencias>]* '}'
 
-
 <mientras> ::= mientras '(' IDENTIFICADOR ')' '{' [<sentencias>]* '}'
-
 
 <asignacion> ::= IDENTIFICADOR '=' <expresion> ';'
 
-
 <expresion> ::= <aritmetica> | <logica> | <relacional> | '!' IDENTIFICADOR
-
 
 <aritmetica> ::= '(' <aritmetica> ')' | <valor_aritmetico> | <aritmetica> [<operador_aritmetico> <aritmetica>]
 
 <operador_aritmetico> ::= '*' | '+' | '/' | '^' | '-'
-
 
 <valor_aritmetico> ::= IDENTIFICADOR | ENTERO | REAL | <llamada_funcion>
 
@@ -94,10 +91,8 @@ Producciones:
 
 <argumentos_funcion> ::= IDENTIFICADOR [',' <argumentos_funcion>]
 
-<logica> ::= '(' <logica> ')' | <logica> [<operador_logico> <logica>] | <valor_logico>
-
+<logica> ::= '(' <logica> ')' | <valor_logico> | <logica> [<operador_logico> <logica>]
 
 <valor_logico> ::= IDENTIFICADOR | LOGICO | <llamada_funcion>
-
 
 <relacional> ::= <valor_aritmetico> OPERADOR_RELACIONAL <valor_aritmetico>
