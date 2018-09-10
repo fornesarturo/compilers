@@ -28,20 +28,28 @@ No Terminales:
 inicio
 principal
 bloque_de_funciones
+sentencias
+sentencia
 funcion
+tipo_de_dato
 argumentos
+argumento
 bloque_de_codigo
 declaraciones
-sentencias
 si
 mientras
 asignacion
 expresion
 aritmetica
+operador_aritmetico
 valor_aritmetico
+llamada_funcion
+argumentos_funcion
 logica
+operador_logico
 valor_logico
 relacional
+operador_relacional
 
 Inicial:
 inicio
@@ -49,16 +57,13 @@ inicio
 Producciones:
 <inicio> ::= <bloque_de_funciones> <principal> | <principal>
 
-
 <principal> ::= principal '(' ')' '{' [<declaraciones>]* [<sentencias>] '}' 
-
 
 <bloque_de_funciones> ::= <funcion> <bloque_de_funciones>
 
 <sentencias> ::= <sentencia> [<sentencias>]
 
 <sentencia> ::= <si> | <mientras> | <asignacion>
-
 
 <funcion> ::= <tipo_de_dato> IDENTIFICADOR '(' [<argumentos>] ')' '{' <bloque_de_codigo> regresa IDENTIFICADOR ';' '}'
 
@@ -71,7 +76,6 @@ Producciones:
 <bloque_de_codigo> ::= [<declaraciones>]* [<sentencias>]*
 
 <declaraciones> ::= <tipo_de_dato> IDENTIFICADOR ';'
-
 
 <si> ::= si '(' IDENTIFICADOR ')' '{' [<sentencias>]* '}'
 
@@ -93,6 +97,10 @@ Producciones:
 
 <logica> ::= '(' <logica> ')' | <valor_logico> | <logica> [<operador_logico> <logica>]
 
+<operador_logico> ::= '|' | '&'
+
 <valor_logico> ::= IDENTIFICADOR | LOGICO | <llamada_funcion>
 
-<relacional> ::= <valor_aritmetico> OPERADOR_RELACIONAL <valor_aritmetico>
+<relacional> ::= <valor_aritmetico> <operador_relacional> <valor_aritmetico>
+
+<operador_relacional> ::= '<' | '>' | '=='
