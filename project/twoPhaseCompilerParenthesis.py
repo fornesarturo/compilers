@@ -2,20 +2,37 @@ import sys
 sys.setrecursionlimit(200)
 
 def parser(tokens, symbol_table):
+    new_symbol_table = {}
     max_i = len(tokens)
     concat_depth_control = {"limit": 5, "current": 0}
     current_err = { "level": 0 }
     # Helpers
-    def handle_err(message, token, level):
+    def handle_err(message, token, level, can_have_error = False):
         err = {"mensaje": message, "token": token, "level": level}
-        if level >= current_err["level"]:
+        if level >= current_err["level"] and not can_have_error:
             current_err.update(err)
         return err
-    def check_token(key, expected_value, error_message, level, c):
+    def check_token(key, expected_value, error_message, level, c, declaration = False, scope = None, can_have_error = False):
         if tokens[c][key] == expected_value:
+            if expected_value == "id" and declaration:
+                idType = tokens[c - 1]["valor"]
+                functionVariable = "función" if tokens[c + 1]["valor"] == "(" else "variable"
+                symbol = {
+                    'funcion_o_variable': functionVariable,
+                    'tipo_de_dato': idType,
+                    'tipo': tokens[c]["tipo"],
+                    'valor': tokens[c]["valor"],
+                    'linea': tokens[c]["linea"],
+                    'caracter': tokens[c]["caracter"]
+                }
+                if new_symbol_table.get(scope):
+                    new_symbol_table[scope][tokens[c]["valor"]] = symbol
+                else:
+                    new_symbol_table[scope] = {}
+                    new_symbol_table[scope][tokens[c]["valor"]] = symbol
             return False, c + 1
         else:
-            return handle_err(error_message, tokens[c], level), c
+            return handle_err(error_message, tokens[c], level, can_have_error), c
     # Producciones:
     # * counter o c, sólo regresará aumentado de ser correcta
     # la derivación.
@@ -23,7 +40,7 @@ def parser(tokens, symbol_table):
     # * Las producciones opcionales ignorarán los errores.
     def inicio(level, counter):
         err, c = bloque_de_funciones(level + 1, counter)
-        err, c = principal(level + 1, c)
+        err, c = principal(level + 1, c, "principal")
         if err:
             return err, False
         return False, True
@@ -40,13 +57,14 @@ def parser(tokens, symbol_table):
         err, c = tipo_de_dato(level + 1, counter)
         if err:
             return err, counter
-        err, c = check_token("tipo", "id", "id esperado", level, c)
+        scope = tokens[c]["valor"]
+        err, c = check_token("tipo", "id", "id esperado", level, c, True, scope)
         if err:
             return err, counter
         err, c = check_token("valor", "(", "'(' esperado", level, c)
         if err:
             return err, counter
-        err, c = argumentos(level + 1, c)
+        err, c = argumentos(level + 1, c, scope)
         err, c = check_token("valor", ")", "')' esperado", level, c)
         if err:
             return err, counter
@@ -54,7 +72,7 @@ def parser(tokens, symbol_table):
         err, c = check_token("valor", "{", "'{' esperado", level, c)
         if err:
             return err, counter
-        err, c = bloque_de_codigo(level + 1, c)
+        err, c = bloque_de_codigo(level + 1, c, scope)
         if err:
             return err, counter
         err, c = check_token("valor", "regresa", "'regresa' esperado", level, c)
@@ -75,12 +93,12 @@ def parser(tokens, symbol_table):
         if tokens[counter]["valor"] in ["real", "entero", "logico"]:
             return False, counter + 1
         return handle_err("'tipo de dato' esperado", tokens[counter], level), counter
-    def argumentos(level, counter):
+    def argumentos(level, counter, scope = None):
         err = False
         coma = True
         c = counter
         while not err:
-            err, c = argumento(level + 1, c)
+            err, c = argumento(level + 1, c, scope)
             if not err:
                 err, c = check_token("valor", ",", "',' esperada", level, c)
                 if err:
@@ -91,34 +109,34 @@ def parser(tokens, symbol_table):
             return False, c
         else:
             return False, counter
-    def argumento(level, counter):
+    def argumento(level, counter, scope = None):
         err, c = tipo_de_dato(level + 1, counter)
         if err:
             return err, counter
-        err, c = check_token("tipo", "id", "id esperado", level, c)
+        err, c = check_token("tipo", "id", "id esperado", level, c, True, scope)
         if err:
             return err, counter
         return False, c
-    def bloque_de_codigo(level, counter):
-        err, c = declaraciones(level + 1, counter)
+    def bloque_de_codigo(level, counter, scope = None):
+        err, c = declaraciones(level + 1, counter, scope)
         err, c = sentencias(level + 1, c)
         if err:
             return err, counter
         return False, c
-    def declaraciones(level, counter):
+    def declaraciones(level, counter, scope = None):
         err = False
         c = counter
         while not err:
-            err, c = declaracion(level + 1, c)
+            err, c = declaracion(level + 1, c, scope)
         if c > counter:
             return False, c
         else:
             return False, counter
-    def declaracion(level, counter):
+    def declaracion(level, counter, scope = None):
         err, c = tipo_de_dato(level + 1, counter)
         if err:
             return err, counter
-        err, c = check_token("tipo", "id", "id esperado", level, c)
+        err, c = check_token("tipo", "id", "id esperado", level, c, True, scope)
         if err:
             return err, counter
         err, c = check_token("tipo", ";", "';' esperado", level, c)
@@ -397,7 +415,7 @@ def parser(tokens, symbol_table):
         if tokens[counter]["valor"] in ["<", ">", "=="]:
             return False, counter + 1
         return handle_err("'operador relacional' esperado", tokens[counter], level), counter
-    def principal(level, counter):
+    def principal(level, counter, scope):
         err, c = check_token('valor', 'principal', "'principal' esperado", level, counter)
         if err:
             return err, counter
@@ -414,7 +432,7 @@ def parser(tokens, symbol_table):
         if err:
             return err, counter
         
-        err, c = bloque_de_codigo(level + 1, c)
+        err, c = bloque_de_codigo(level + 1, c, scope)
         if err:
             return err, counter
         
@@ -426,8 +444,8 @@ def parser(tokens, symbol_table):
     # Producción Inicial
     err, result = inicio(0, 0)
     if err:
-        return False, current_err
-    return True, symbol_table
+        return current_err, False, None
+    return False, True, new_symbol_table
 
 def scanner(filename):
     tokens = []
@@ -539,6 +557,7 @@ def scanner(filename):
                 
                 possible_type = "error"
                 c_no += 1
+                c_buffer += c
             line = f.readline()
             line_no += 1
         buffer_match(possible_type, c_buffer, line_no - 1, c_start)
@@ -548,6 +567,7 @@ def scanner(filename):
 
 if __name__ == '__main__':
     tokens, symbols, errors = scanner("Archivo_Fuente.txt")
+    print("\n=====================\nAnálisis Léxico\n=====================")
     print("Tokens\n=====================")
     for token in tokens:
         print(token)
@@ -558,5 +578,13 @@ if __name__ == '__main__':
     for error in errors:
         print(error)
 
-    result, err = parser(tokens, symbols)
-    print(result, err)
+    print("\n=====================\nAnálisis Sintáctico\n=====================")
+    err, result, syntax_symbols = parser(tokens, symbols)
+    print("Aceptado: ", result)
+    if err:
+        print("Error: ", err)
+    else:
+        for scope in syntax_symbols:
+            print(scope + ":")
+            for symbol in syntax_symbols[scope]:
+                print("  \"" + symbol +"\":", syntax_symbols[scope][symbol])
