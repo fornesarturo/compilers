@@ -476,7 +476,6 @@ def scanner(filename):
             line_length = len(line)
             while c_no < line_length:
                 c = line[c_no]
-                
                 if c in unary_tokens:
                     buffer_match(possible_type, c_buffer, line_no, c_start)
                     buffer_match(c, c, line_no, c_no)
@@ -484,21 +483,18 @@ def scanner(filename):
                     c_no += 1
                     c_buffer = ""
                     continue
-                
                 if c in whitespace:
                     buffer_match(possible_type, c_buffer, line_no, c_start)
                     possible_type = ""
                     c_no += 1
                     c_buffer = ""
                     continue
-                
                 if possible_type == "" and ord(c) >= ord('a') and ord(c) <= ord('z'):
                     c_start = c_no
                     c_buffer += c
                     c_no += 1
                     possible_type = "id"
                     continue
-                
                 if possible_type == "id" and (
                         (ord(c) >= ord('a') and ord(c) <= ord('z')) or
                         (ord(c) >= ord('0') and ord(c) <= ord('9')) or
