@@ -1,10 +1,8 @@
 import sys
-sys.setrecursionlimit(100)
+sys.setrecursionlimit(200)
 
 def parser(tokens, symbol_table):
     new_symbol_table = {}
-    max_i = len(tokens)
-    concat_depth_control = { "limit": 5, "current": 0 }
     current_err = { "level": 0 }
     # Helpers
     def handle_err(message, token, level, can_have_error = False):
@@ -218,7 +216,6 @@ def parser(tokens, symbol_table):
             return err, counter
         return False, c
     def expresion(level, counter):
-        concat_depth_control["current"] = 0
         err, c = aritmetica(level + 1, counter)
         if not err:
             err, c = check_token("valor", ";", "';' esperado", level, c)
