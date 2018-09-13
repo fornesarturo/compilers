@@ -55,7 +55,7 @@ Inicial:
 inicio
 
 Producciones:
-<inicio> ::= <bloque_de_funciones> <principal> | <principal>
+<inicio> ::= [<bloque_de_funciones>] <principal>
 
 <principal> ::= principal '(' ')' '{' [<declaraciones>]* [<sentencias>] '}' 
 
