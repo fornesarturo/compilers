@@ -40,7 +40,7 @@ def parser(tokens, symbol_table):
         func_err, c = bloque_de_funciones(level + 1, counter)
         err, c = principal(level + 1, c, "principal")
         if err:
-            if func_err["level"] > err["level"]:
+            if func_err and func_err["level"] > err["level"]:
                 return func_err, False
             return err, False
         return False, True
