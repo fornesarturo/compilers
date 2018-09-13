@@ -1,10 +1,10 @@
 import sys
-sys.setrecursionlimit(200)
+sys.setrecursionlimit(100)
 
 def parser(tokens, symbol_table):
     new_symbol_table = {}
     max_i = len(tokens)
-    concat_depth_control = {"limit": 5, "current": 0}
+    concat_depth_control = { "limit": 5, "current": 0 }
     current_err = { "level": 0 }
     # Helpers
     def handle_err(message, token, level, can_have_error = False):
@@ -39,9 +39,11 @@ def parser(tokens, symbol_table):
     # * Las producciones regresarán error, siguiente posición.
     # * Las producciones opcionales ignorarán los errores.
     def inicio(level, counter):
-        err, c = bloque_de_funciones(level + 1, counter)
+        func_err, c = bloque_de_funciones(level + 1, counter)
         err, c = principal(level + 1, c, "principal")
         if err:
+            if func_err["level"] > err["level"]:
+                return func_err, False
             return err, False
         return False, True
     def bloque_de_funciones(level, counter):
@@ -52,7 +54,7 @@ def parser(tokens, symbol_table):
         if c > counter:
             return False, c
         else:
-            return False, counter
+            return err, counter
     def funcion(level, counter):
         err, c = tipo_de_dato(level + 1, counter)
         if err:
@@ -84,7 +86,6 @@ def parser(tokens, symbol_table):
         err, c = check_token("valor", ";", "';' esperado", level, c)
         if err:
             return err, counter
-        
         err, c = check_token("valor", "}", "'}' esperado", level, c)
         if err:
             return err, counter
@@ -419,23 +420,18 @@ def parser(tokens, symbol_table):
         err, c = check_token('valor', 'principal', "'principal' esperado", level, counter)
         if err:
             return err, counter
-        
         err, c = check_token("tipo", "(", "'(' esperado", level, c)
         if err:
             return err, counter
-        
         err, c = check_token("tipo", ")", "')' esperado", level, c)
         if err:
             return err, counter
-        
         err, c = check_token("tipo", "{", "'{' esperado", level, c)
         if err:
             return err, counter
-        
         err, c = bloque_de_codigo(level + 1, c, scope)
         if err:
             return err, counter
-        
         err, c = check_token("tipo", "}", "'}' esperado", level, c)
         if err:
             return err, counter
@@ -444,7 +440,7 @@ def parser(tokens, symbol_table):
     # Producción Inicial
     err, result = inicio(0, 0)
     if err:
-        return current_err, False, None
+        return err, False, None
     return False, True, new_symbol_table
 
 def scanner(filename):
@@ -462,14 +458,14 @@ def scanner(filename):
         if not valor:
             return
         if tipo == 'error':
-            errors.append({'tipo': tipo, 'valor': valor, 'linea': linea, 'caracter': caracter})
+            errors.append({'tipo': tipo, 'valor': valor, 'linea': linea + 1, 'caracter': caracter + 1})
             return
         if tipo == 'id':
             if valor in reserved:
                 tipo = "reservada"
             elif valor not in symbol_table:
-                symbol_table[valor] = {'tipo': tipo, 'valor': valor, 'linea': linea, 'caracter': caracter}
-        tokens.append({'tipo': tipo, 'valor': valor, 'linea': linea, 'caracter': caracter})
+                symbol_table[valor] = {'tipo': tipo, 'valor': valor, 'linea': linea + 1, 'caracter': caracter + 1}
+        tokens.append({'tipo': tipo, 'valor': valor, 'linea': linea + 1, 'caracter': caracter + 1})
         
     with open(filename, 'r') as f:
         line = f.readline()
@@ -514,19 +510,16 @@ def scanner(filename):
                     c_buffer += c
                     c_no += 1
                     continue
-                
                 if possible_type == "" and ord(c) >= ord('0') and ord(c) <= ord('9'):
                     c_start = c_no
                     c_buffer += c
                     c_no += 1
                     possible_type = "entero"
                     continue
-                
                 if (possible_type == "entero" or possible_type == "real") and ord(c) >= ord('0') and ord(c) <= ord('9'):
                     c_buffer += c
                     c_no += 1
                     continue
-                
                 if possible_type == "entero" and c == '.':
                     c_buffer += c
                     c_no += 1
@@ -541,7 +534,6 @@ def scanner(filename):
                         c_no += 1
                         possible_type = "error"
                         continue
-                
                 if c == "=":
                     buffer_match(possible_type, c_buffer, line_no, c_no)
                     c_buffer = ""
@@ -554,7 +546,6 @@ def scanner(filename):
                         buffer_match('=', '=', line_no, c_no)
                         c_no += 1
                         continue
-                
                 possible_type = "error"
                 c_no += 1
                 c_buffer += c
@@ -562,8 +553,7 @@ def scanner(filename):
             line_no += 1
         buffer_match(possible_type, c_buffer, line_no - 1, c_start)
         return tokens, symbol_table, errors    
-    return [], {}, []       
-
+    return [], {}, []
 
 if __name__ == '__main__':
     tokens, symbols, errors = scanner("Archivo_Fuente.txt")
@@ -578,13 +568,14 @@ if __name__ == '__main__':
     for error in errors:
         print(error)
 
-    print("\n=====================\nAnálisis Sintáctico\n=====================")
-    err, result, syntax_symbols = parser(tokens, symbols)
-    print("Aceptado: ", result)
-    if err:
-        print("Error: ", err)
-    else:
-        for scope in syntax_symbols:
-            print(scope + ":")
-            for symbol in syntax_symbols[scope]:
-                print("  \"" + symbol +"\":", syntax_symbols[scope][symbol])
+    if len(errors) == 0:
+        print("\n=====================\nAnálisis Sintáctico\n=====================")
+        err, result, syntax_symbols = parser(tokens, symbols)
+        print("Aceptado: ", result)
+        if err:
+            print("Error: ", err)
+        else:
+            for scope in syntax_symbols:
+                print(scope + ":")
+                for symbol in syntax_symbols[scope]:
+                    print("  \"" + symbol +"\":", syntax_symbols[scope][symbol])
