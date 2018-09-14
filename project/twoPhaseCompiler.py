@@ -50,7 +50,7 @@ def parser(tokens, symbol_table):
         while not err:
             err, c = funcion(level + 1, c)
         if c > counter:
-            return False, c
+            return err, c
         else:
             return err, counter
     def funcion(level, counter):
